@@ -158,3 +158,15 @@ This verified:
 - SSH
 - Git
 - GitHub
+
+## Architecture
+
+![Architecture](screenshots/architecture.png)
+
+## Bastion Host
+
+![Bastion Host](screenshots/bastianhost.png)
+
+## Connectivity Validation
+
+![Ping Success](screenshots/ping.png)
