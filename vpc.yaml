@@ -142,7 +142,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 173.32.7.187/32
+          CidrIp: x.x.x.x/32
 
   AppInstance1A:
     Type: AWS::EC2::Instance
