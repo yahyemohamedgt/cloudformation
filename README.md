@@ -161,11 +161,11 @@ This verified:
 
 ## Architecture
 
-![Architecture](screenshots/architecture.png)
+![Architecture](screenshots/Architecture.png)
 
 ## Bastion Host
 
-![Bastion Host](screenshots/bastianhost.png)
+![Bastion Host](screenshots/Bastianhost.png)
 
 ## Connectivity Validation
 
