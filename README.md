@@ -1,87 +1,90 @@
 # AWS CloudFormation Infrastructure Portfolio
 
-## Overview
+7 templates. One progression. Built entirely as code.
 
-This repository contains a collection of AWS Infrastructure as Code (IaC) projects built using AWS CloudFormation.
+This repository documents how I approached building 
+production-style AWS infrastructure from scratch — 
+starting with a single S3 bucket and ending with a 
+multi-AZ, auto-scaling web stack with a managed 
+database layer.
 
-The goal of this portfolio is to demonstrate practical experience deploying and managing AWS infrastructure components including networking, compute, storage, databases, load balancing, and auto scaling.
+Infrastructure defined and deployed primarily through AWS CloudFormation and version-controlled in Git.
 
-## Projects Included
+---
 
-### VPC & Networking
+## The progression
 
-- Custom VPC (10.0.0.0/16)
-- Public and Private Subnets across multiple Availability Zones
-- Internet Gateway
-- Route Tables
-- Security Groups
+template.yaml     → S3 bucket (baseline)
+vpc.yaml          → 3-tier VPC, Bastion Host, 
+                    private subnet isolation
+ec2.yaml          → ALB + Apache web servers, 
+                    health checks, port 80 listener
+asg.yaml          → Auto Scaling Group, CloudWatch 
+                    alarm, scale-up at CPU > 70%
+rds.yaml          → RDS MySQL, automated backups, 
+                    private subnet placement
+iam.yaml          → Users, groups, roles, 
+                    least-privilege policy scoping
+s3-static.yaml    → Static website hosting, 
+                    public bucket policy
 
-### IAM
+---
 
-- IAM users
-- IAM groups
-- IAM policies
-- Permission management using Infrastructure as Code
+## Architecture (asg.yaml — most complete template)
 
-### EC2 Web Infrastructure
+Internet
+    │
+    ▼
+[Internet Gateway]
+    │
+    ▼
+┌─── Public Subnets (AZ-1a / AZ-1b) ──────────┐
+│  [ALB] — port 80, health checks              │
+│  [Bastion] — SSH restricted to x.x.x.x/32   │
+└──────────────────────────────────────────────┘
+    │
+    ▼
+┌─── Private App Subnets ──────────────────────┐
+│  [EC2 via ASG] min 1 / desired 2 / max 3     │
+│  CloudWatch: CPU > 70% → +1 instance         │
+└──────────────────────────────────────────────┘
+    │
+    ▼
+┌─── Private Data Subnets ─────────────────────┐
+│  [RDS MySQL] db.t3.micro                     │
+│  20GB · 7-day backup · private access only   │
+└──────────────────────────────────────────────┘
 
-- EC2 instances deployed through CloudFormation
-- Apache web server installation using User Data
-- Multi-AZ deployment
+---
 
-### Application Load Balancer (ALB)
+## Decisions worth noting
 
-- Load balancing across multiple EC2 instances
-- Target Groups
-- Health Checks
-- HTTP Listener configuration
+**Why a Bastion Host instead of SSM Session Manager?**
+Bastion was intentional for learning SSH key management 
+and security group chaining. SSM would be the 
+production preference — no open ports, full audit trail.
 
-### Auto Scaling Group (ASG)
+**Why CloudWatch CPU alarm for scaling?**
+Simple and demonstrable. In production I'd layer in 
+ALB request count and custom application metrics 
+for more responsive scaling decisions.
 
-- Launch Templates
-- Auto Scaling Group
-- Desired Capacity: 2
-- Minimum Capacity: 1
-- Maximum Capacity: 3
-- CloudWatch Alarm
-- Scaling Policy
+**What I'd change in production**
+- RDS password via Secrets Manager (currently 
+  hardcoded — never do this in production)
+- NAT Gateway for private subnet egress
+- VPC Flow Logs + CloudTrail enabled by default
+- Separate stacks with cross-stack references 
+  instead of monolithic templates
 
-### Amazon S3 Static Website Hosting
+---
 
-- Static website deployment
-- Bucket Policies
-- Public website endpoint
-- HTML content hosting
+## What's next
 
-### Amazon RDS
-
-- MySQL database deployment
-- CloudFormation-managed infrastructure
-- Automated backups
-- Database lifecycle management
-
-## Technologies Used
-
-- AWS CloudFormation
-- Amazon VPC
-- Amazon EC2
-- Application Load Balancer
-- Auto Scaling Groups
-- Amazon S3
-- Amazon RDS
-- IAM
-- CloudWatch
-- Git
-- GitHub
-
-## Repository Structure
-
-- vpc.yaml
-- iam.yaml
-- ec2.yaml
-- asg.yaml
-- s3-static.yaml
-- rds.yaml
+Rebuilding this stack in Terraform — same architecture, 
+different tooling. Then deploying real AI workloads 
+(RAG pipelines, LangGraph agents) on top of this 
+infrastructure foundation.
 
 ## Screenshots
 
@@ -96,13 +99,3 @@ The goal of this portfolio is to demonstrate practical experience deploying and 
 ## Connectivity Validation
 
 ![Ping Success](screenshots/ping.png)
-
-## Key Lessons Learned
-
-- Infrastructure can be deployed and version-controlled using CloudFormation.
-- Networking, compute, storage, and databases can be managed consistently through IaC.
-- Auto Scaling improves availability and elasticity.
-- Load Balancers distribute traffic across multiple instances.
-- S3 can host static websites with minimal operational overhead.
-- RDS simplifies managed database operations.
-
