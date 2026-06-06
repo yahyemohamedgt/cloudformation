@@ -1,163 +1,89 @@
-# AWS Multi-AZ VPC Infrastructure Lab
+# AWS CloudFormation Infrastructure Portfolio
 
 ## Overview
 
-This project deploys a multi-AZ AWS environment using CloudFormation.
+This repository contains a collection of AWS Infrastructure as Code (IaC) projects built using AWS CloudFormation.
 
-The environment includes:
+The goal of this portfolio is to demonstrate practical experience deploying and managing AWS infrastructure components including networking, compute, storage, databases, load balancing, and auto scaling.
 
-- Custom VPC
-- Public and Private Subnets
+## Projects Included
+
+### VPC & Networking
+
+- Custom VPC (10.0.0.0/16)
+- Public and Private Subnets across multiple Availability Zones
 - Internet Gateway
 - Route Tables
-- Bastion Host
-- Private Application Servers
 - Security Groups
 
-All infrastructure is deployed using Infrastructure as Code (IaC) through AWS CloudFormation.
+### IAM
 
----
+- IAM users
+- IAM groups
+- IAM policies
+- Permission management using Infrastructure as Code
 
-## Architecture
+### EC2 Web Infrastructure
 
-### VPC
+- EC2 instances deployed through CloudFormation
+- Apache web server installation using User Data
+- Multi-AZ deployment
 
-CIDR Block:
+### Application Load Balancer (ALB)
 
-10.0.0.0/16
+- Load balancing across multiple EC2 instances
+- Target Groups
+- Health Checks
+- HTTP Listener configuration
 
-### Availability Zone A
+### Auto Scaling Group (ASG)
 
-- PublicSubnet1A (10.0.1.0/24)
-- AppPrivateSubnet1A (10.0.2.0/24)
-- DataPrivateSubnet1A (10.0.3.0/24)
+- Launch Templates
+- Auto Scaling Group
+- Desired Capacity: 2
+- Minimum Capacity: 1
+- Maximum Capacity: 3
+- CloudWatch Alarm
+- Scaling Policy
 
-### Availability Zone B
+### Amazon S3 Static Website Hosting
 
-- PublicSubnet2B (10.0.4.0/24)
-- AppPrivateSubnet2B (10.0.5.0/24)
-- DataPrivateSubnet2B (10.0.6.0/24)
+- Static website deployment
+- Bucket Policies
+- Public website endpoint
+- HTML content hosting
 
----
+### Amazon RDS
 
-## Networking
-
-An Internet Gateway is attached to the VPC.
-
-Public subnets are associated with a public route table containing:
-
-0.0.0.0/0 → Internet Gateway
-
-This allows internet access for resources placed in public subnets.
-
----
-
-## Bastion Host
-
-A Bastion Host is deployed inside PublicSubnet1A.
-
-Purpose:
-
-- Secure administrative access
-- SSH entry point into the environment
-- Access private resources without exposing them directly to the internet
-
-SSH access is restricted to my public IP address through a Security Group.
-
----
-
-## Application Instances
-
-Two EC2 application servers are deployed:
-
-- AppInstance1A
-- AppInstance2B
-
-Both reside in private subnets.
-
-These instances do not have direct public internet access.
-
----
-
-## Security Groups
-
-### BastionHostSG
-
-Allows:
-
-- TCP 22 (SSH)
-- Source: My public IP
-
-### AppInstance1ASG
-
-Allows:
-
-- TCP 22 (SSH)
-- Source: BastionHostSG
-
-### AppInstance2BSG
-
-Allows:
-
-- ICMP (Ping)
-- Source: AppInstance1ASG
-
----
-
-## Validation Performed
-
-### SSH Validation
-
-Successfully connected:
-
-Laptop → Bastion Host
-
-Successfully connected:
-
-Bastion Host → AppInstance1A
-
-### Network Validation
-
-Successfully tested ICMP connectivity:
-
-AppInstance1A → AppInstance2B
-
-Results:
-
-- 5 packets transmitted
-- 5 packets received
-- 0% packet loss
-
-This verified:
-
-- VPC routing
-- Subnet communication
-- Security Group configuration
-- Private network connectivity
-
----
-
-## Key Lessons Learned
-
-- Infrastructure can be deployed using CloudFormation instead of manual console configuration.
-- Security Groups control traffic based on protocol, source, and destination.
-- Bastion Hosts provide secure access to private infrastructure.
-- Successful routing does not guarantee successful connectivity; Security Groups must also permit traffic.
-- ICMP and SSH require separate Security Group rules.
-
----
+- MySQL database deployment
+- CloudFormation-managed infrastructure
+- Automated backups
+- Database lifecycle management
 
 ## Technologies Used
 
 - AWS CloudFormation
 - Amazon VPC
 - Amazon EC2
-- Security Groups
-- Internet Gateway
-- Route Tables
-- SSH
+- Application Load Balancer
+- Auto Scaling Groups
+- Amazon S3
+- Amazon RDS
+- IAM
+- CloudWatch
 - Git
 - GitHub
+
+## Repository Structure
+
+- vpc.yaml
+- iam.yaml
+- ec2.yaml
+- asg.yaml
+- s3-static.yaml
+- rds.yaml
+
+## Screenshots
 
 ## Architecture
 
@@ -170,3 +96,13 @@ This verified:
 ## Connectivity Validation
 
 ![Ping Success](screenshots/ping.png)
+
+## Key Lessons Learned
+
+- Infrastructure can be deployed and version-controlled using CloudFormation.
+- Networking, compute, storage, and databases can be managed consistently through IaC.
+- Auto Scaling improves availability and elasticity.
+- Load Balancers distribute traffic across multiple instances.
+- S3 can host static websites with minimal operational overhead.
+- RDS simplifies managed database operations.
+
