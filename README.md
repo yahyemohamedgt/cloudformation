@@ -8,74 +8,65 @@ starting with a single S3 bucket and ending with a
 multi-AZ, auto-scaling web stack with a managed 
 database layer.
 
-Infrastructure defined and deployed primarily through AWS CloudFormation and version-controlled in Git.
+Everything version-controlled.
 
 ---
 
 ## The progression
 
-template.yaml     → S3 bucket (baseline)
-vpc.yaml          → 3-tier VPC, Bastion Host, 
-                    private subnet isolation
-ec2.yaml          → ALB + Apache web servers, 
-                    health checks, port 80 listener
-asg.yaml          → Auto Scaling Group, CloudWatch 
-                    alarm, scale-up at CPU > 70%
-rds.yaml          → RDS MySQL, automated backups, 
-                    private subnet placement
-iam.yaml          → Users, groups, roles, 
-                    least-privilege policy scoping
-s3-static.yaml    → Static website hosting, 
-                    public bucket policy
+```
+template.yaml   ->  S3 bucket (baseline)
+vpc.yaml        ->  3-tier VPC, Bastion Host, private subnet isolation
+ec2.yaml        ->  ALB + Apache web servers, health checks, port 80 listener
+asg.yaml        ->  Auto Scaling Group, CloudWatch alarm, scale-up at CPU > 70%
+rds.yaml        ->  RDS MySQL, automated backups, private subnet placement
+iam.yaml        ->  Users, groups, roles, least-privilege policy scoping
+s3-static.yaml  ->  Static website hosting, public bucket policy
+```
 
 ---
 
 ## Architecture (asg.yaml — most complete template)
 
+```
 Internet
-    │
-    ▼
+    |
+    v
 [Internet Gateway]
-    │
-    ▼
-┌─── Public Subnets (AZ-1a / AZ-1b) ──────────┐
-│  [ALB] — port 80, health checks              │
-│  [Bastion] — SSH restricted to x.x.x.x/32   │
-└──────────────────────────────────────────────┘
-    │
-    ▼
-┌─── Private App Subnets ──────────────────────┐
-│  [EC2 via ASG] min 1 / desired 2 / max 3     │
-│  CloudWatch: CPU > 70% → +1 instance         │
-└──────────────────────────────────────────────┘
-    │
-    ▼
-┌─── Private Data Subnets ─────────────────────┐
-│  [RDS MySQL] db.t3.micro                     │
-│  20GB · 7-day backup · private access only   │
-└──────────────────────────────────────────────┘
-
----
+    |
+    v
+[ Public Subnets: AZ-1a / AZ-1b ]
+    [ALB]     - port 80, health checks
+    [Bastion] - SSH restricted to x.x.x.x/32
+    |
+    v
+[ Private App Subnets ]
+    [EC2 via ASG] min 1 / desired 2 / max 3
+    CloudWatch: CPU > 70% -> +1 instance
+    |
+    v
+[ Private Data Subnets ]
+    [RDS MySQL] db.t3.micro
+    20GB / 7-day backup / private access only
+```
 
 ## Decisions worth noting
 
-**Why a Bastion Host instead of SSM Session Manager?**
+**Why a Bastion Host instead of SSM Session Manager?**  
 Bastion was intentional for learning SSH key management 
-and security group chaining. SSM would be the 
-production preference — no open ports, full audit trail.
+and security group chaining. SSM would be the production 
+preference — no open ports, full audit trail.
 
-**Why CloudWatch CPU alarm for scaling?**
-Simple and demonstrable. In production I'd layer in 
-ALB request count and custom application metrics 
-for more responsive scaling decisions.
+**Why CloudWatch CPU alarm for scaling?**  
+Simple and demonstrable. In production I'd layer in ALB 
+request count and custom application metrics for more 
+responsive scaling decisions.
 
 **What I'd change in production**
-- RDS password via Secrets Manager (currently 
-  hardcoded — never do this in production)
+- RDS password via Secrets Manager (currently hardcoded — never do this in production)
 - NAT Gateway for private subnet egress
 - VPC Flow Logs + CloudTrail enabled by default
-- Separate stacks with cross-stack references 
-  instead of monolithic templates
+- Separate stacks with cross-stack references instead of monolithic templates
 
 ---
 
